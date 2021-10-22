@@ -24,7 +24,7 @@ fmt:
 	go fmt ${PKG}
 
 test:
-	go test ${PKG} -race -coverprofile=coverage.txt -covermode=atomic
+	go test -v ${PKG} -race -coverprofile=coverage.txt -covermode=atomic
 
 lint: fmt vet
 
