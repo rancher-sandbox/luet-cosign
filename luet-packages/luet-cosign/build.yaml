@@ -1,0 +1,18 @@
+image: golang
+env:
+  - PATH=$PATH:/usr/local/go/bin
+  - GOPATH=/luetbuild/go
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+  - LDFLAGS="-s -w"
+prelude:
+  - |
+    PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+    mkdir -p /luetbuild/go/src/github.com/rancher-sandbox && cd /luetbuild/go/src/github.com/rancher-sandbox && \
+    git clone https://github.com/rancher-sandbox/luet-cosign && cd luet-cosign && git checkout "v${PACKAGE_VERSION}" -b build
+steps:
+  - |
+    PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+    cd /luetbuild/go/src/github.com/rancher-sandbox/luet-cosign && make build && mv bin/luet-cosign /usr/bin/luet-cosign
+includes:
+  - /usr/bin/luet-cosign
