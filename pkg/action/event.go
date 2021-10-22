@@ -65,6 +65,11 @@ func (event LuetEvent) Run() (map[string]string, error) {
 		// Do the checks again in case something changed between the 2 events
 		pass := os.Getenv("COSIGN_PASSWORD")
 		keyLocation := os.Getenv("COSIGN_KEY_LOCATION")
+		cosignDebug := os.Getenv("COSIGN_DEBUG")
+		if cosignDebug != "" {
+			cosignDebug = "-d=true"
+		}
+
 		if pass == "" || keyLocation == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
 		}
@@ -74,15 +79,17 @@ func (event LuetEvent) Run() (map[string]string, error) {
 		}
 		log.Log("Signing image: %s", data.ImageName)
 
-		args := fmt.Sprintf("echo -n '%s' | cosign sign -key %s %s", pass, keyLocation, data.ImageName)
+		args := fmt.Sprintf("echo -n '%s' | cosign %s sign -key %s %s", pass, cosignDebug, keyLocation, data.ImageName)
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
 
 		if err != nil {
+			log.Log("Error while executing cosign: %s", out)
 			return helpers.WrapErrorMap(err)
 		} else {
 			// enhance return values with the command output
 			ret, _ := helpers.WrapErrorMap(err)
 			ret["state"] = string(out)
+			log.Log("Cosign output: %s", out)
 			log.Log("Finished signing and pushing %s", data.ImageName)
 			return ret, err
 		}
