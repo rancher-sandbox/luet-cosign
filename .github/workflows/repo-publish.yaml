@@ -3,7 +3,7 @@ name: Luet repo publish
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
           curl https://get.mocaccino.org/luet/get_luet_root.sh | sudo sh
           sudo -E make build-repo create-repo
       - name: Deploy GH Pages 🚀
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: JamesIves/github-pages-deploy-action@3.6.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
