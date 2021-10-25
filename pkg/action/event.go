@@ -31,12 +31,13 @@ type UnpackEvent struct {
 	File string `json:"file"`
 }
 
-type ImagePostPushData struct {
+type ImageData struct {
 	ImageName string `json:"ImageName"`
+	Image string `json:"Image"`
 }
 
 type ImagePreUnpackData struct {
-	Image string `json:"Image"`
+
 }
 
 type LuetEvent struct {
@@ -60,7 +61,7 @@ func (event LuetEvent) Run() (map[string]string, error) {
 		if pass == "" || keyLocation == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
 		}
-		_, err := unPackImagePostPushDataPayload(event.payload)
+		_, err := unPackImageDataPayload(event.payload)
 		if err != nil {
 			return helpers.WrapErrorMap(err)
 		}
@@ -77,7 +78,7 @@ func (event LuetEvent) Run() (map[string]string, error) {
 		if pass == "" || keyLocation == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
 		}
-		data, err := unPackImagePostPushDataPayload(event.payload)
+		data, err := unPackImageDataPayload(event.payload)
 		if err != nil {
 			return helpers.WrapErrorMap(err)
 		}
@@ -109,7 +110,7 @@ func (event LuetEvent) Run() (map[string]string, error) {
 			cosignDebug = "-d=true"
 		}
 
-		data, err := unPackImagePreUnpackPayload(event.payload)
+		data, err := unPackImageDataPayload(event.payload)
 		if err != nil {
 			return helpers.WrapErrorMap(err)
 		}
@@ -137,9 +138,9 @@ func (event LuetEvent) Run() (map[string]string, error) {
 }
 
 
-func unPackImagePostPushDataPayload(payload string) (ImagePostPushData, error) {
+func unPackImageDataPayload(payload string) (ImageData, error) {
 	payloadTmp := pluggable.Event{}
-	dataTmp := ImagePostPushData{}
+	dataTmp := ImageData{}
 	// unpack payload
 	err := json.Unmarshal([]byte(payload), &payloadTmp)
 	if err != nil {
@@ -155,35 +156,9 @@ func unPackImagePostPushDataPayload(payload string) (ImagePostPushData, error) {
 		return dataTmp, err
 	}
 
-	if dataTmp.ImageName == "" {
+	if dataTmp.ImageName == "" && dataTmp.Image == "" {
 		log.Log("Some fields are missing from the event, cannot continue")
-		return dataTmp, errors.New("field ImageName missing from payload")
-	}
-
-	return dataTmp, nil
-}
-
-func unPackImagePreUnpackPayload(payload string) (ImagePreUnpackData, error) {
-	payloadTmp := pluggable.Event{}
-	dataTmp := ImagePreUnpackData{}
-	// unpack payload
-	err := json.Unmarshal([]byte(payload), &payloadTmp)
-	if err != nil {
-		log.Log("Error while unmarshalling payload")
-		log.Log("Payload: %s", payload)
-		return dataTmp, err
-	}
-	// unpack data inside payload
-	err = json.Unmarshal([]byte(payloadTmp.Data), &dataTmp)
-	if err != nil {
-		log.Log("Error while unmarshalling data from the payload")
-		log.Log("Payload: %s", payloadTmp.Data)
-		return dataTmp, err
-	}
-
-	if dataTmp.Image == "" {
-		log.Log("Some fields are missing from the event, cannot continue")
-		return dataTmp, errors.New("field Image missing from payload")
+		return dataTmp, errors.New("field ImageName/Image missing from payload")
 	}
 
 	return dataTmp, nil
