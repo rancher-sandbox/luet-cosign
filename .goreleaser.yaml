@@ -4,7 +4,7 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/rancher-sandbox/luet-cosign/internal/version.version={{.Tag}}
-      - -X github.com/rancher-sandbox/luet-cosing/internal/version.gitCommit={{.Commit}}
+      - -X github.com/rancher-sandbox/luet-cosign/internal/version.gitCommit={{.Commit}}
     goos:
       - linux
     goarch:
