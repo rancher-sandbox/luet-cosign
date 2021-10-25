@@ -35,6 +35,10 @@ type ImagePostPushData struct {
 	ImageName string `json:"ImageName"`
 }
 
+type ImagePreUnpackData struct {
+	Image string `json:"Image"`
+}
+
 type LuetEvent struct {
 	event   pluggable.EventType
 	payload string
@@ -93,6 +97,39 @@ func (event LuetEvent) Run() (map[string]string, error) {
 			log.Log("Finished signing and pushing %s", data.ImageName)
 			return ret, err
 		}
+	case bus.EventImagePreUnPack:
+		log.Log(event.payload)
+		keyLocation := os.Getenv("COSIGN_PUBLIC_KEY_LOCATION")
+		if keyLocation == "" {
+			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PUBLIC_KEY_LOCATION"))
+		}
+
+		cosignDebug := os.Getenv("COSIGN_DEBUG")
+		if cosignDebug != "" {
+			cosignDebug = "-d=true"
+		}
+
+		data, err := unPackImagePreUnpackPayload(event.payload)
+		if err != nil {
+			return helpers.WrapErrorMap(err)
+		}
+		log.Log("Verifying image: %s", data.Image)
+
+		args := fmt.Sprintf("cosign %s verify -key %s %s", cosignDebug, keyLocation, data.Image)
+
+		out, err := exec.Command("bash", "-c", args).CombinedOutput()
+		log.Log(string(out))
+		if err != nil {
+			log.Log("Error while executing cosign: %s", out)
+			return helpers.WrapErrorMap(err)
+		} else {
+			// enhance return values with the command output
+			ret, _ := helpers.WrapErrorMap(err)
+			ret["state"] = string(out)
+			log.Log("Cosign output: %s", out)
+			log.Log("Finished verifying %s", data.Image)
+			return ret, err
+		}
 	default:
 		log.Log("No event that I can recognize")
 		return helpers.WrapErrorMap(nil)
@@ -121,6 +158,32 @@ func unPackImagePostPushDataPayload(payload string) (ImagePostPushData, error) {
 	if dataTmp.ImageName == "" {
 		log.Log("Some fields are missing from the event, cannot continue")
 		return dataTmp, errors.New("field ImageName missing from payload")
+	}
+
+	return dataTmp, nil
+}
+
+func unPackImagePreUnpackPayload(payload string) (ImagePreUnpackData, error) {
+	payloadTmp := pluggable.Event{}
+	dataTmp := ImagePreUnpackData{}
+	// unpack payload
+	err := json.Unmarshal([]byte(payload), &payloadTmp)
+	if err != nil {
+		log.Log("Error while unmarshalling payload")
+		log.Log("Payload: %s", payload)
+		return dataTmp, err
+	}
+	// unpack data inside payload
+	err = json.Unmarshal([]byte(payloadTmp.Data), &dataTmp)
+	if err != nil {
+		log.Log("Error while unmarshalling data from the payload")
+		log.Log("Payload: %s", payloadTmp.Data)
+		return dataTmp, err
+	}
+
+	if dataTmp.Image == "" {
+		log.Log("Some fields are missing from the event, cannot continue")
+		return dataTmp, errors.New("field Image missing from payload")
 	}
 
 	return dataTmp, nil
