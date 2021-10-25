@@ -23,6 +23,7 @@ import (
 	"github.com/rancher-sandbox/luet-cosign/pkg/log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type UnpackEvent struct {
@@ -51,7 +52,7 @@ func NewEventDispatcherAction(event string, payload string) *LuetEvent {
 }
 
 
-func (event LuetEvent) Run() (map[string]string, error) {
+func (event LuetEvent) Run() map[string]string {
 	log.Log("Got event: %s\n", event.event)
 	switch event.event {
 	case bus.EventImagePrePush:
@@ -92,14 +93,13 @@ func (event LuetEvent) Run() (map[string]string, error) {
 			return helpers.WrapErrorMap(err)
 		} else {
 			// enhance return values with the command output
-			ret, _ := helpers.WrapErrorMap(err)
+			ret := helpers.WrapErrorMap(err)
 			ret["state"] = string(out)
 			log.Log("Cosign output: %s", out)
 			log.Log("Finished signing and pushing %s", data.ImageName)
-			return ret, err
+			return ret
 		}
 	case bus.EventImagePreUnPack:
-		log.Log(event.payload)
 		keyLocation := os.Getenv("COSIGN_PUBLIC_KEY_LOCATION")
 		if keyLocation == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PUBLIC_KEY_LOCATION"))
@@ -119,17 +119,19 @@ func (event LuetEvent) Run() (map[string]string, error) {
 		args := fmt.Sprintf("cosign %s verify -key %s %s", cosignDebug, keyLocation, data.Image)
 
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
-		log.Log(string(out))
 		if err != nil {
+			if strings.Contains(string(out), "MANIFEST UNKNOWN") {
+				log.Log("Either the image doesnt exists or there is no signature")
+			}
 			log.Log("Error while executing cosign: %s", out)
-			return helpers.WrapErrorMap(err)
+			return helpers.WrapErrorMap(errors.New(string(out)))
 		} else {
 			// enhance return values with the command output
-			ret, _ := helpers.WrapErrorMap(err)
+			ret := helpers.WrapErrorMap(err)
 			ret["state"] = string(out)
 			log.Log("Cosign output: %s", out)
 			log.Log("Finished verifying %s", data.Image)
-			return ret, err
+			return ret
 		}
 	default:
 		log.Log("No event that I can recognize")

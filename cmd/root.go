@@ -14,9 +14,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/rancher-sandbox/luet-cosign/pkg/log"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // NewRootCmd represents the base command when called without any subcommands
@@ -27,11 +25,7 @@ func NewRootCmd() *cobra.Command {
 		Short:         "Without a subcommand will parse events from luet",
 		SilenceErrors: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := newEventCmd(args)
-			if err != nil {
-				log.Log(err.Error())
-				os.Exit(1)
-			}
+			newEventCmd(args)
 		},
 	}
 
