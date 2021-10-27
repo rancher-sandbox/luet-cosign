@@ -31,6 +31,12 @@ Using it as a plugin for luet requires 2 environment variables in order to make 
 luet-cosign will use that key to call cosign on the pulled artifact and verify the signature.
 
 
+
+### Keyless signing/verify
+
+You can use the experimental keyless verify/sign process by setting the `COSIGN_EXPERIMENTAL=1` env var.
+Please see the [upstream docs for cosign](https://github.com/sigstore/cosign/blob/main/KEYLESS.md)
+
 ### Manual use of luet-cosign
 
 You can manually test those events by calling luet-cosign with no subcommands and 2 params. The first being the event emitted (see events emitted by luet [here](https://github.com/mudler/luet/blob/master/pkg/api/core/bus/events.go)) and the second a json payload, the contents depend on the type of event.

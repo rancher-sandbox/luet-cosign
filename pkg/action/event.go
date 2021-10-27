@@ -59,7 +59,8 @@ func (event LuetEvent) Run() map[string]string {
 		// We need to fail on the pre-push, otherwise the image will be pushed but the signature not, so we better make as many checks here as we can
 		pass := os.Getenv("COSIGN_PASSWORD")
 		keyLocation := os.Getenv("COSIGN_KEY_LOCATION")
-		if pass == "" || keyLocation == "" {
+		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
+		if (pass == "" || keyLocation == "") && cosignExperimental == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
 		}
 		_, err := unPackImageDataPayload(event.payload)
@@ -75,8 +76,9 @@ func (event LuetEvent) Run() map[string]string {
 		if cosignDebug != "" {
 			cosignDebug = "-d=true"
 		}
+		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
 
-		if pass == "" || keyLocation == "" {
+		if (pass == "" || keyLocation == "") && cosignExperimental == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
 		}
 		data, err := unPackImageDataPayload(event.payload)
@@ -85,7 +87,15 @@ func (event LuetEvent) Run() map[string]string {
 		}
 		log.Log("Signing image: %s", data.ImageName)
 
-		args := fmt.Sprintf("echo -n '%s' | cosign %s sign -key %s %s", pass, cosignDebug, keyLocation, data.ImageName)
+		var args string
+
+		if cosignExperimental != "" {
+			log.Log("Using experimental keyless signing!")
+			args = fmt.Sprintf("cosign %s sign %s", cosignDebug, data.ImageName)
+		} else {
+			args = fmt.Sprintf("echo -n '%s' | cosign %s sign -key %s %s", pass, cosignDebug, keyLocation, data.ImageName)
+		}
+
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
 
 		if err != nil {
@@ -101,7 +111,9 @@ func (event LuetEvent) Run() map[string]string {
 		}
 	case bus.EventImagePreUnPack:
 		keyLocation := os.Getenv("COSIGN_PUBLIC_KEY_LOCATION")
-		if keyLocation == "" {
+		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
+
+		if keyLocation == "" && cosignExperimental == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PUBLIC_KEY_LOCATION"))
 		}
 
@@ -116,7 +128,14 @@ func (event LuetEvent) Run() map[string]string {
 		}
 		log.Log("Verifying image: %s", data.Image)
 
-		args := fmt.Sprintf("cosign %s verify -key %s %s", cosignDebug, keyLocation, data.Image)
+		var args string
+
+		if cosignExperimental != "" {
+			log.Log("Using experimental keyless verify!")
+			args = fmt.Sprintf("cosign %s verify %s", cosignDebug, data.Image)
+		} else {
+			args = fmt.Sprintf("cosign %s verify -key %s %s", cosignDebug, keyLocation, data.Image)
+		}
 
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
 		if err != nil {
