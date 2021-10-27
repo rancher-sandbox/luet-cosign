@@ -36,6 +36,7 @@ luet-cosign will use that key to call cosign on the pulled artifact and verify t
 
 You can use the experimental keyless verify/sign process by setting the `COSIGN_EXPERIMENTAL=1` env var.
 Please see the [upstream docs for cosign](https://github.com/sigstore/cosign/blob/main/KEYLESS.md)
+This is only possible to do in an CI environment (github) if using luet-cosign as a plugin as it requires an OIDC token to be available.
 
 ### Manual use of luet-cosign
 

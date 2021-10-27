@@ -60,8 +60,13 @@ func (event LuetEvent) Run() map[string]string {
 		pass := os.Getenv("COSIGN_PASSWORD")
 		keyLocation := os.Getenv("COSIGN_KEY_LOCATION")
 		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
+		githubRun := os.Getenv("CI")
 		if (pass == "" || keyLocation == "") && cosignExperimental == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PASSWORD or COSIGN_KEY_LOCATION"))
+		}
+
+		if cosignExperimental != "" && githubRun != "true" {
+			return helpers.WrapErrorMap(errors.New("cannot run keyless in a non-github run, I need auto OIDC tokens"))
 		}
 		_, err := unPackImageDataPayload(event.payload)
 		if err != nil {
@@ -73,6 +78,7 @@ func (event LuetEvent) Run() map[string]string {
 		pass := os.Getenv("COSIGN_PASSWORD")
 		keyLocation := os.Getenv("COSIGN_KEY_LOCATION")
 		cosignDebug := os.Getenv("COSIGN_DEBUG")
+		githubRun := os.Getenv("CI")
 		if cosignDebug != "" {
 			cosignDebug = "-d=true"
 		}
@@ -86,6 +92,10 @@ func (event LuetEvent) Run() map[string]string {
 			return helpers.WrapErrorMap(err)
 		}
 		log.Log("Signing image: %s", data.ImageName)
+
+		if cosignExperimental != "" && githubRun != "true" {
+			return helpers.WrapErrorMap(errors.New("cannot run keyless in a non-github run, I need auto OIDC tokens"))
+		}
 
 		var args string
 
