@@ -114,7 +114,7 @@ func (event LuetEvent) Run() map[string]string {
 		} else {
 			// enhance return values with the command output
 			ret := helpers.WrapErrorMap(err)
-			ret["state"] = string(out)
+			ret["state"] = fmt.Sprintf("Finished signing and pushing %s", data.ImageName)
 			log.Log("Cosign output: %s", out)
 			log.Log("Finished signing and pushing %s", data.ImageName)
 			return ret
@@ -157,7 +157,7 @@ func (event LuetEvent) Run() map[string]string {
 		} else {
 			// enhance return values with the command output
 			ret := helpers.WrapErrorMap(err)
-			ret["state"] = string(out)
+			ret["state"] = fmt.Sprintf("%s verified. See luet-cosing logs for full info.", data.Image)
 			log.Log("Cosign output: %s", out)
 			log.Log("Finished verifying %s", data.Image)
 			return ret
