@@ -31,6 +31,65 @@ Using it as a plugin for luet requires 2 environment variables in order to make 
 luet-cosign will use that key to call cosign on the pulled artifact and verify the signature.
 
 
+### Skip verifying some artifacts
+
+While verifying you can set the `COSIGN_SKIP` env var to a list (space separated) of regex values used to skip verification of some artifacts, or even the full repo.
+
+For example, we want to skip verifying on luet-cosign packages older than `0.0.6` (included) because we didn't start signing those packages until `0.0.7`:
+
+```bash
+$ export COSIGN_SKIP=".*luet-cosign.*toolchain.*0.0.[0-6].*"
+$ luet --plugin luet-cosign install toolchain/luet-cosign 
+ INFO   🍭 Enabled plugins:
+ INFO   	➡  luet-cosign (at /usr/local/bin/luet-cosign)
+           
+  Install  
+           
+ INFO   Downloading quay.io/costoolkit/releases-green:repository.yaml                                     
+ SUCCESS   🍭  Plugin luet-cosign at /usr/local/bin/luet-cosign succeded, state reported:                 
+ INFO   quay.io/costoolkit/releases-green:repository.yaml verified. See luet-cosign logs for full info.   
+ INFO   Pulled: sha256:de493f32c460cfbdd97258ecf1d7c5ccd151feb6b8fc4e44b2c098f222528fa5                   
+ INFO   Size: 628B                                                                                        
+ INFO   Downloading quay.io/costoolkit/releases-green:tree.tar.zst                                        
+ SUCCESS   🍭  Plugin luet-cosign at /usr/local/bin/luet-cosign succeded, state reported:                 
+ INFO   quay.io/costoolkit/releases-green:tree.tar.zst verified. See luet-cosign logs for full info.      
+ INFO   Pulled: sha256:f5561ccf05338a574e36273ed0e37f07109fcd25d9527747ebcae3d54ed6c155                   
+ INFO   Size: 5.205KiB                                                                                    
+ INFO   Downloading quay.io/costoolkit/releases-green:repository.meta.yaml.tar.zst                        
+ SUCCESS   🍭  Plugin luet-cosign at /usr/local/bin/luet-cosign succeded, state reported:                 
+ INFO   quay.io/costoolkit/releases-green:repository.meta.yaml.tar.zst verified. See luet-cosign logs for full info.
+ INFO   Pulled: sha256:11684b8d37dd5d53a6806e5390bbe1bb70c1f27a6643ce54707ab1e81344b567                   
+ INFO   Size: 193.3KiB                                                                                    
+ INFO   🏠  Repository cOS revision: 137 (2021-11-02 04:53:22 +0100 CET)                                  
+ INFO   ℹ  Repository: cos Priority: 1 Type: docker                                                       
+ INFO   Packages that are going to be installed in the system:                                            
+
+Program Name          | Version | License | Repository
+toolchain/luet-cosign | 0.0.6-1 |         | cos       
+
+ INFO   By going forward, you are also accepting the licenses of the packages that you are going to install in your system.
+ INFO   Do you want to continue with this operation? [y/N]: 
+y
+Downloading packages [0/1] █                                                                       0% | 0s
+ INFO   Downloading image quay.io/costoolkit/releases-green:luet-cosign-toolchain-0.0.6-1                 
+ SUCCESS   🍭  Plugin luet-cosign at /usr/local/bin/luet-cosign succeded, state reported:                 
+ INFO   Image quay.io/costoolkit/releases-green:luet-cosign-toolchain-0.0.6-1 found in skip list (.*luet-cosign.*toolchain.*0.0.[0-6].*)
+ INFO   Pulled: sha256:9377596ed7f98c084a86a96f0536ddbfacf7a3e90567e8b577745b602d4d6d3d                   
+ INFO   Size: 3.09MiB                                                                                     
+
+Downloading packages [1/1] █████████████████████████████████████████████████████████████████████ 100% | 1s
+ INFO   Checking for file conflicts..
+ INFO   📦  Package  toolchain/luet-cosign-0.0.6-1 installed 
+
+```
+
+As you can see above, the `luet-cosign-toolchain-0.0.6-1` artifact was matched and skipped, while the rest of the artifacts were verified (tree, meta, repository.yaml)
+
+As soon as version `0.0.7` is published, the same skip list won't match and the package will be verified.
+
+And if this package pulled some dependencies, those would also be verified properly, so `COSIGN_SKIP` is meant to be used only on special occasions when there is no possibility of verifying the artifact and only to skip specific packages so the rest of the chain is verified fully.
+
+
 
 ### Keyless signing/verify
 

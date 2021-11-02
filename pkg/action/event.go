@@ -23,6 +23,7 @@ import (
 	"github.com/rancher-sandbox/luet-cosign/pkg/log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -122,6 +123,14 @@ func (event LuetEvent) Run() map[string]string {
 	case bus.EventImagePreUnPack:
 		keyLocation := os.Getenv("COSIGN_PUBLIC_KEY_LOCATION")
 		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
+		skipListEnv := os.Getenv("COSIGN_SKIP")
+		var skipList []string
+
+		if skipListEnv != "" {
+			skipList = strings.Split(skipListEnv, " ")
+		} else {
+			skipList = make([]string, 0)
+		}
 
 		if keyLocation == "" && cosignExperimental == "" {
 			return helpers.WrapErrorMap(errors.New("missing cosign env vars COSIGN_PUBLIC_KEY_LOCATION"))
@@ -137,6 +146,14 @@ func (event LuetEvent) Run() map[string]string {
 			return helpers.WrapErrorMap(err)
 		}
 		log.Log("Verifying image: %s", data.Image)
+
+		if findInSlice(skipList, data.Image) {
+			msg := fmt.Sprintf("Image %s found in skip list (%s)", data.Image, strings.Join(skipList, ","))
+			log.Log(msg)
+			ret := helpers.WrapErrorMap(nil)
+			ret["state"] = msg
+			return ret
+		}
 
 		var args string
 
@@ -157,7 +174,7 @@ func (event LuetEvent) Run() map[string]string {
 		} else {
 			// enhance return values with the command output
 			ret := helpers.WrapErrorMap(err)
-			ret["state"] = fmt.Sprintf("%s verified. See luet-cosing logs for full info.", data.Image)
+			ret["state"] = fmt.Sprintf("%s verified. See luet-cosign logs for full info.", data.Image)
 			log.Log("Cosign output: %s", out)
 			log.Log("Finished verifying %s", data.Image)
 			return ret
@@ -193,4 +210,13 @@ func unPackImageDataPayload(payload string) (ImageData, error) {
 	}
 
 	return dataTmp, nil
+}
+
+func findInSlice(slice []string, val string) bool {
+	for _, item := range slice {
+		if  match, _ := regexp.MatchString(item, val); match {
+			return true
+		}
+	}
+	return false
 }
