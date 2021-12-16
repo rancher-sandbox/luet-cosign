@@ -82,7 +82,7 @@ func (event LuetEvent) Run() map[string]string {
 		}
 		githubRun := os.Getenv("CI")
 		if cosignDebug != "" {
-			cosignDebug = "-d=true"
+			cosignDebug = "-d"
 		}
 		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
 
