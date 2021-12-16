@@ -35,11 +35,10 @@ type UnpackEvent struct {
 
 type ImageData struct {
 	ImageName string `json:"ImageName"`
-	Image string `json:"Image"`
+	Image     string `json:"Image"`
 }
 
 type ImagePreUnpackData struct {
-
 }
 
 type LuetEvent struct {
@@ -47,11 +46,9 @@ type LuetEvent struct {
 	payload string
 }
 
-
 func NewEventDispatcherAction(event string, payload string) *LuetEvent {
 	return &LuetEvent{event: pluggable.EventType(event), payload: payload}
 }
-
 
 func (event LuetEvent) Run() map[string]string {
 	log.Log("Got event: %s\n", event.event)
@@ -79,9 +76,13 @@ func (event LuetEvent) Run() map[string]string {
 		pass := os.Getenv("COSIGN_PASSWORD")
 		keyLocation := os.Getenv("COSIGN_KEY_LOCATION")
 		cosignDebug := os.Getenv("COSIGN_DEBUG")
+		fulcioUrl := os.Getenv("COSIGN_FULCIO_URL")
+		if fulcioUrl == "" {
+			fulcioUrl = "https://fulcio.sigstore.dev"
+		}
 		githubRun := os.Getenv("CI")
 		if cosignDebug != "" {
-			cosignDebug = "-d=true"
+			cosignDebug = "-d"
 		}
 		cosignExperimental := os.Getenv("COSIGN_EXPERIMENTAL")
 
@@ -102,9 +103,9 @@ func (event LuetEvent) Run() map[string]string {
 
 		if cosignExperimental != "" {
 			log.Log("Using experimental keyless signing!")
-			args = fmt.Sprintf("cosign %s sign %s", cosignDebug, data.ImageName)
+			args = fmt.Sprintf("cosign %s --fulcio-url=%s sign %s", cosignDebug, fulcioUrl, data.ImageName)
 		} else {
-			args = fmt.Sprintf("echo -n '%s' | cosign %s sign -key %s %s", pass, cosignDebug, keyLocation, data.ImageName)
+			args = fmt.Sprintf("echo -n '%s' | cosign %s --fulcio-url=%s sign -key %s %s", pass, cosignDebug, fulcioUrl, keyLocation, data.ImageName)
 		}
 
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
@@ -185,7 +186,6 @@ func (event LuetEvent) Run() map[string]string {
 	}
 }
 
-
 func unPackImageDataPayload(payload string) (ImageData, error) {
 	payloadTmp := pluggable.Event{}
 	dataTmp := ImageData{}
@@ -214,7 +214,7 @@ func unPackImageDataPayload(payload string) (ImageData, error) {
 
 func findInSlice(slice []string, val string) bool {
 	for _, item := range slice {
-		if  match, _ := regexp.MatchString(item, val); match {
+		if match, _ := regexp.MatchString(item, val); match {
 			return true
 		}
 	}

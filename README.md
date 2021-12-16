@@ -19,6 +19,8 @@ Using it as a plugin for luet requires 2 environment variables in order to make 
 
 luet-cosign will use both those values to call cosign on the pushed container while publishing a repo and will create and push the signatures along the containers.
 
+There is an optional parameter `COSIGN_FULCIO_URL` to override the fulcio url passed to cosign. Defaults to `https://fulcio.sigstore.dev`
+
 
 ### Verifying
 
