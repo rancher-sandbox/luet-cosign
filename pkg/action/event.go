@@ -108,6 +108,15 @@ func (event LuetEvent) Run() map[string]string {
 			args = fmt.Sprintf("echo -n '%s' | cosign %s --fulcio-url=%s sign -key %s %s", pass, cosignDebug, fulcioUrl, keyLocation, data.ImageName)
 		}
 
+		tmpDir, err := os.MkdirTemp("", "cosign-tuf-*")
+		defer os.RemoveAll(tmpDir)
+		if err != nil {
+			return helpers.WrapErrorMap(err)
+		}
+
+		// Give each cosign its own tuf dir so it doesnt collide with others accessing the same files at the same time
+		_ = os.Setenv("TUF_ROOT", tmpDir)
+
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
 
 		if err != nil {
@@ -164,6 +173,15 @@ func (event LuetEvent) Run() map[string]string {
 		} else {
 			args = fmt.Sprintf("cosign %s verify -key %s %s", cosignDebug, keyLocation, data.Image)
 		}
+
+		tmpDir, err := os.MkdirTemp("", "cosign-tuf-*")
+		defer os.RemoveAll(tmpDir)
+		if err != nil {
+			return helpers.WrapErrorMap(err)
+		}
+
+		// Give each cosign its own tuf dir so it doesnt collide with others accessing the same files at the same time
+		_ = os.Setenv("TUF_ROOT", tmpDir)
 
 		out, err := exec.Command("bash", "-c", args).CombinedOutput()
 		if err != nil {
