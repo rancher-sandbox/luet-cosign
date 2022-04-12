@@ -1,0 +1,25 @@
+description: Luet cosign official repository
+enable: true
+index: []
+last_update: "1649759502"
+name: luet-cosign
+repo_files:
+  compilertree:
+    checksums:
+      sha256: eee6a09bd5ca0c382a6ebaa36561c55f5314ddd0e812c6c8690c0a2160d0cf42
+    compressiontype: gzip
+    filename: 20220412103142-compilertree.tar.gz
+  meta:
+    checksums:
+      sha256: e816d3132f3f7035c78dc4b00a578c703f4ac06a09eac3e5dba140d9b0db854d
+    compressiontype: none
+    filename: 20220412103142-repository.meta.yaml.tar
+  tree:
+    checksums:
+      sha256: 2c3ed11bd4f93351f0036395f29208fbfe4d0d9f45d7fd2538490f75157f9150
+    compressiontype: gzip
+    filename: 20220412103142-tree.tar.gz
+revision: 1
+type: http
+urls:
+- http://localhost:8000

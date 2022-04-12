@@ -1,0 +1,135 @@
+path: /home/runner/work/luet-cosign/luet-cosign/build/luet-cosign-toolchain-0.0.11.package.tar.gz
+dependencies: []
+compilespec:
+    steps:
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          cd /luetbuild/go/src/github.com/rancher-sandbox/luet-cosign && make build && mv bin/luet-cosign /usr/bin/luet-cosign
+    env:
+        - PATH=$PATH:/usr/local/go/bin
+        - GOPATH=/luetbuild/go
+        - GO111MODULE=on
+        - CGO_ENABLED=0
+        - LDFLAGS="-s -w"
+    prelude:
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          mkdir -p /luetbuild/go/src/github.com/rancher-sandbox && cd /luetbuild/go/src/github.com/rancher-sandbox && \
+          git clone https://github.com/rancher-sandbox/luet-cosign && cd luet-cosign && git checkout "v${PACKAGE_VERSION}" -b build
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: luet-cosign
+        version: 0.0.11
+        category: toolchain
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-04-12 10:31:41.536938816 +0000 UTC m=+101.791878798
+        labels:
+            autobump.revbump_related: system/cos
+            autobump.revdeps: "true"
+            github.owner: rancher-sandbox
+            github.repo: luet-cosign
+        treedir: ./luet-packages
+    sourceassertion:
+        - package:
+            id: 0
+            name: luet-cosign
+            version: 0.0.11
+            category: toolchain
+            useflags: []
+            state: ""
+            packagerequires: []
+            packageconflicts: []
+            provides: []
+            hidden: false
+            annotations: {}
+            path: ""
+            description: ""
+            uri: []
+            license: ""
+            buildtimestamp: ""
+            labels:
+                autobump.revbump_related: system/cos
+                autobump.revdeps: "true"
+                github.owner: rancher-sandbox
+                github.repo: luet-cosign
+            treedir: ./luet-packages
+          value: true
+          hash:
+            buildhash: 2142a3fdb80b2a7c53eb3db15ad36ce33e552d08e95eccdf44cb1c24aef9f93f
+            packagehash: 4d6d5b1bbdec416462d6f70cd474b23e1ac3a87e3e48f627bdf1ff8963f99bb8
+    package_dir: ""
+    retrieve: []
+    outputpath: /home/runner/work/luet-cosign/luet-cosign/build
+    unpack: false
+    includes:
+        - /usr/bin/luet-cosign
+    excludes: []
+    buildoptions:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+        pushfinalimages: false
+        pushfinalimagesforce: false
+        pushfinalimagesrepository: ""
+        context: null
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 3a6972041bc95309e07b33b55b1b04498224b5f1f168a9ead7a7a65b868a122c
+sourceassertion: []
+compressiontype: gzip
+files:
+    - usr/bin/luet-cosign
+packagecacheimage: ""
+runtime:
+    id: 0
+    name: luet-cosign
+    version: 0.0.11
+    category: toolchain
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        autobump.revbump_related: system/cos
+        autobump.revdeps: "true"
+        github.owner: rancher-sandbox
+        github.repo: luet-cosign
+    treedir: ""
